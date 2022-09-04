@@ -20,14 +20,17 @@ when the request is invalidated, regularly pull a data source and update all the
 
 As I couldn't find a library for vanillajs, I implemented `cached-query`
 
-## General Information
-
-* [npm page]()
-
 ## Installation
 
+### in the browser
+
+```html
+<script src="https://unpkg.com/cached-query/dist/cached-query.min.js"></script>
 ```
-npm install --save cached-query
+
+### with npm
+```
+npm install --save @fabienarcellier/cached-query
 ```
 
 ## The latest version
