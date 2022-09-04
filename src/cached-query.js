@@ -15,6 +15,7 @@ export function preparedCquery(key, url, request_options = {}) {
         error: undefined,
         key: key,
         isLoading: false,
+        mock: false,
         url: url,
         request_options: request_options
     };
@@ -22,8 +23,8 @@ export function preparedCquery(key, url, request_options = {}) {
 
 export function cquery(key, callback) {
     const query = cquery_cache[key];
+
     if (query.data === undefined && query.isLoading === false && query.error === undefined) {
-        query.isLoading = true;
         _fetchFromQuery(query);
 
         query.callbacks.push(callback);
@@ -41,14 +42,28 @@ export function invalidateCquery(key) {
     }
 
     if (query.isLoading === false) {
-        query.data = undefined;
-        query.isLoading = true;
-
         _fetchFromQuery(query);
     }
 }
 
+export function mockCquery(key, data, isLoading = false, error = undefined) {
+    const query = cquery_cache[key];
+    query.mock = true;
+    query.data = data;
+    query.isLoading = isLoading;
+    query.error = error;
+}
+
 function _fetchFromQuery(query) {
+    if (query.mock === true) {
+        for (const _callback in query.callbacks) {
+            query.callbacks[_callback](query.data, query.isLoading, query.error);
+        }
+        return;
+    }
+
+    query.data = undefined;
+    query.isLoading = true;
     fetch(query.url, query.request_options)
         .then(res => res.json())
         .then(data => {

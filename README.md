@@ -80,6 +80,48 @@ user_by_gender();
 // run the query once, and execute the callback of users and user_by_gender.
 invalidateCquery("users");
 ```
+
+### Test your javascript code without calling your API
+
+`cached-query` permet de mocker un appel externe pour tester votre code et 
+de renvoyer un résultat directement avec la méthode `mockCquery`.
+
+```javascript
+preparedCquery("users", "https://randomuser.me/api/?seed=foobar&results=5")
+mockCquery("users", {results: []})
+
+function users() {
+    cquery("users", (data, loading, error) => {
+        if (loading == false) {
+            console.log(data.results)
+        }
+    })
+}
+
+function user_by_gender() {
+    cquery("users", (data, loading, error) => {
+        if (loading == false) {
+            results = {}
+            for (key in data.results) {
+                user = data.results[key]
+                gender = user.gender
+                if (!(gender in results)) {
+                    results[gender] = [] 
+                }
+                results[gender].push(user)
+                
+            }
+            
+            // display the list in the dom element
+            console.log(results)
+        }
+    })
+}
+
+users();
+user_by_gender();
+```
+
 ## Continuous integration
 
 [soon]
