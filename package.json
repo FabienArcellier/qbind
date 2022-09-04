@@ -1,0 +1,32 @@
+{
+  "name": "cached-query",
+  "version": "0.0.1",
+  "description": "powerful asynchronous data fetching management for vanillajs",
+  "main": "src/cached-query.js",
+  "scripts": {
+    "build": "webpack --mode=production",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "watch": "webpack --mode=development --watch"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/FabienArcellier/cached-query.git"
+  },
+  "keywords": [
+    "cache",
+    "fetch",
+    "query",
+    "async",
+    "state-management"
+  ],
+  "author": "Fabien Arcellier",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/FabienArcellier/cached-query/issues"
+  },
+  "homepage": "https://github.com/FabienArcellier/cached-query#readme",
+  "devDependencies": {
+    "webpack": "^5.74.0",
+    "webpack-cli": "^4.10.0"
+  }
+}
