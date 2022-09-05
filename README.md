@@ -2,8 +2,8 @@
 
 powerful asynchronous data fetching management for vanillajs. 
 
-**This library is experimental**. Its API is likely to evolve between 2 versions. It covers a need
-immediate but I do not undertake to ensure its maintenance.
+**This library is experimental**. Its API is likely to evolve between 2 versions. It covers one of my specific requirements.
+I am not sure to maintain this library yet.
 
 This library is inspired from :
 
@@ -13,39 +13,32 @@ This library is inspired from :
 ## Motivation
 
 I wanted to use a frontend library [Alpine.js](https://alpinejs.dev/), lighter than React or Vue.js, to make interactive interface.
+I need a asynchronous state management module as [react-query](https://github.com/TanStack/query) to :
 
-I was looking for an equivalent of [react-query](https://github.com/TanStack/query) to :
+* declare query as independant code
+* deduplicate REST requests if several widgets load the same data source
+* update all widgets when the request is invalidated and run again
+* regularly pull a data source and update all the widgets that use it (not implemented yet).
+* mock REST requests easily to perform unit test
 
-* declare query as external module
-* deduplicate REST requests if several components load the same data source
-* update all components when the request is invalidated and run again
-* regularly pull a data source and update all the components that use it.
-* mock REST requests easily
-
-As I couldn't find a library for vanillajs, I implemented `cached-query`
+As I couldn't find a library that match this requirement for vanillajs, I decide to implement `cached-query`
 
 ## Installation
 
-### in the browser
+### install in the browser
 
 ```html
 <script src="https://unpkg.com/cached-query/dist/cached-query.min.js"></script>
 ```
 
-### with npm
+### install with npm
 ```
 npm install --save cached-query
 ```
 
-## The latest version
-
-You can find the latest version to ...
-
-```bash
-git clone https://github.com/FabienArcellier/cached-query.git
-```
-
 ## Code Example
+
+the following examples can be played in the browser console when installing `cached-query` in the browser.
 
 ```javascript
 preparedQuery("users", "https://randomuser.me/api/?seed=foobar&results=5")
@@ -87,8 +80,8 @@ invalidateQuery("users");
 
 ### Test your javascript code without calling your API
 
-`cached-query` permet de mocker un appel externe pour tester votre code et 
-de renvoyer un résultat directement avec la méthode `mockCquery`.
+`cached-query` allows you to mock an external call in your automatic tests with the `mockQuery` method and 
+bypass the request to the server by returning a pre-programmed response.
 
 ```javascript
 preparedQuery("users", "https://randomuser.me/api/?seed=foobar&results=5")
@@ -104,6 +97,14 @@ function users() {
 
 /* use the mock instead of calling the api */
 users();
+```
+
+## The latest version
+
+You can find the latest version to ...
+
+```bash
+git clone https://github.com/FabienArcellier/cached-query.git
 ```
 
 ## Continuous integration
