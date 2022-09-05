@@ -10,7 +10,7 @@ export const cquery_cache = {};
  * @param url the url of the request to replace
  * @param request_options the options of the request (see the options of the fetch method)
  */
-export function preparedQuery(key, url, request_options = {}) {
+export function preparedQuery(key, url, request_options = {}, options = {}) {
     if (key in cquery_cache) {
         let query = cquery_cache[key];
 
@@ -21,7 +21,7 @@ export function preparedQuery(key, url, request_options = {}) {
         return;
     }
 
-    cquery_cache[key] = {
+    let query = {
         callbacks: [],
         data: undefined,
         error: undefined,
@@ -29,8 +29,16 @@ export function preparedQuery(key, url, request_options = {}) {
         isLoading: false,
         mock: false,
         url: url,
-        request_options: request_options
+        request_options: request_options,
+        invalidationStop: undefined,
+        invalidationInterval: undefined
     };
+
+    if ('interval' in options) {
+        _loopQuery(query, options.interval);
+    }
+
+    cquery_cache[key] = query;
 }
 
 /**
@@ -63,10 +71,20 @@ export function useQuery(key, callback) {
     }
 }
 
-export function invalidateQuery(key) {
+/**
+ * invalidates the data loaded by a request
+ *
+ * If the interval parameter is set, data for a request is
+ * invalidated every X seconds.
+ *
+ * @param key the key of the prepared query
+ * @param interval le nombre de seconde entre 2 invalidations
+ */
+export function invalidateQuery(key, interval = undefined) {
     _assertQueryExists(key);
 
     const query = cquery_cache[key];
+
     if (query.data === undefined && query.isLoading === false) {
         return;
     }
@@ -121,4 +139,9 @@ function _fetchFromQuery(query) {
                 query.callbacks[_callback](query.data, query.isLoading, query.error);
             }
       });
+}
+
+function _loopQuery(query, interval) {
+    query.invalidationStop = setTimeout(() => _loopQuery(query, interval), interval * 1000);
+    _fetchFromQuery(query);
 }

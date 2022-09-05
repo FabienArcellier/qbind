@@ -74,8 +74,45 @@ function userByGender() {
 users();
 userByGender();
 
-// run the query once, and execute the callback of users and user_by_gender.
+// run the query once, and execute the callback of users and userByFender.
 invalidateQuery("users");
+```
+
+### Run an api request every 60 seconds
+
+```javascript
+preparedQuery("users", "https://randomuser.me/api/?seed=foobar", {}, {interval: 60})
+
+function users() {
+    useQuery("users", (data, loading, error) => {
+        if (loading == false) {
+            console.log(data.results)
+        }
+    })
+}
+
+function userByGender() {
+    useQuery("users", (data, loading, error) => {
+        if (loading == false) {
+            results = {}
+            for (key in data.results) {
+                user = data.results[key]
+                gender = user.gender
+                if (!(gender in results)) {
+                    results[gender] = [] 
+                }
+                results[gender].push(user)
+                
+            }
+            
+            // display the list in the dom element
+            console.log(results)
+        }
+    })
+}
+
+users();
+userByGender();
 ```
 
 ### Test your javascript code without calling your API
