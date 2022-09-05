@@ -1,6 +1,6 @@
 {
   "name": "cached-query",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "powerful asynchronous data fetching management for vanillajs",
   "main": "src/cached-query.js",
   "scripts": {

@@ -1,5 +1,15 @@
 export const cquery_cache = {};
 
+/**
+ * Prepare a new api request
+ *
+ * A prepared query is lazy.
+ * It is not executed until the useQuery function has been called once with this query.
+ *
+ * @param key the key of the prepared query to replace
+ * @param url the url of the request to replace
+ * @param request_options the options of the request (see the options of the fetch method)
+ */
 export function preparedQuery(key, url, request_options = {}) {
     if (key in cquery_cache) {
         let query = cquery_cache[key];
@@ -23,9 +33,25 @@ export function preparedQuery(key, url, request_options = {}) {
     };
 }
 
-export function useQuery(key, callback) {
-    const query = cquery_cache[key];
+/**
+ * replaces the API call of an existing prepared request with a new url.
+ *
+ * @param key the key of the prepared query to replace
+ * @param url the url of the request to replace
+ * @param request_options the options of the request (see the options of the fetch method)
+ */
+export function replaceQuery(key, url, request_options = {}) {
+    _assertQueryExists(key);
 
+    let query = cquery_cache[key];
+    query.url = url;
+    query.request_options = request_options;
+}
+
+export function useQuery(key, callback) {
+    _assertQueryExists(key);
+
+    const query = cquery_cache[key];
     if (query.data === undefined && query.isLoading === false && query.error === undefined) {
         _fetchFromQuery(query);
 
@@ -38,6 +64,8 @@ export function useQuery(key, callback) {
 }
 
 export function invalidateQuery(key) {
+    _assertQueryExists(key);
+
     const query = cquery_cache[key];
     if (query.data === undefined && query.isLoading === false) {
         return;
@@ -49,11 +77,20 @@ export function invalidateQuery(key) {
 }
 
 export function mockQuery(key, data, isLoading = false, error = undefined) {
+    _assertQueryExists(key);
+
     const query = cquery_cache[key];
     query.mock = true;
     query.data = data;
     query.isLoading = isLoading;
     query.error = error;
+}
+
+function _assertQueryExists(key) {
+    if (!(key in cquery_cache)) {
+        const queries = Object.keys(cquery_cache);
+        throw `The query '${key}' does not exists - prepared queries : [${queries}]`;
+    }
 }
 
 function _fetchFromQuery(query) {
