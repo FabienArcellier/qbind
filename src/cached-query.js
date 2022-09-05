@@ -1,12 +1,14 @@
 export const cquery_cache = {};
 
-export function preparedCquery(key, url, request_options = {}) {
+export function preparedQuery(key, url, request_options = {}) {
     if (key in cquery_cache) {
         let query = cquery_cache[key];
 
         if (query.url !== url) {
             console.warn(`ignore the url: a query already exists with different url ${query.url}, you try to prepare for ${url}`);
         }
+
+        return;
     }
 
     cquery_cache[key] = {
@@ -21,7 +23,7 @@ export function preparedCquery(key, url, request_options = {}) {
     };
 }
 
-export function cquery(key, callback) {
+export function useQuery(key, callback) {
     const query = cquery_cache[key];
 
     if (query.data === undefined && query.isLoading === false && query.error === undefined) {
@@ -35,7 +37,7 @@ export function cquery(key, callback) {
     }
 }
 
-export function invalidateCquery(key) {
+export function invalidateQuery(key) {
     const query = cquery_cache[key];
     if (query.data === undefined && query.isLoading === false) {
         return;
@@ -46,7 +48,7 @@ export function invalidateCquery(key) {
     }
 }
 
-export function mockCquery(key, data, isLoading = false, error = undefined) {
+export function mockQuery(key, data, isLoading = false, error = undefined) {
     const query = cquery_cache[key];
     query.mock = true;
     query.data = data;
