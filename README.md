@@ -44,7 +44,7 @@ the following examples can be played in the browser console when installing `cac
 preparedQuery("users", "https://randomuser.me/api/?seed=foobar&results=5")
 
 function users() {
-    useQuery("users", (data, loading, error) => {
+    useQuery("users", (data, loading, error, response) => {
         if (loading == false) {
             console.log(data.results)
         }
@@ -52,7 +52,7 @@ function users() {
 }
 
 function userByGender() {
-    useQuery("users", (data, loading, error) => {
+    useQuery("users", (data, loading, error, response) => {
         if (loading == false) {
             results = {}
             for (key in data.results) {
@@ -78,13 +78,13 @@ userByGender();
 invalidateQuery("users");
 ```
 
-### Run an api request every 60 seconds
+### Recurring query : Run an api request every 5 seconds and refresh dependent widgets
 
 ```javascript
-preparedQuery("users", "https://randomuser.me/api/?seed=foobar", {}, {interval: 60})
+preparedQuery("users", "https://randomuser.me/api/?seed=foobar", {}, {interval: 5})
 
 function users() {
-    useQuery("users", (data, loading, error) => {
+    useQuery("users", (data, loading, error, response) => {
         if (loading == false) {
             console.log(data.results)
         }
@@ -115,7 +115,7 @@ users();
 userByGender();
 ```
 
-### Test your javascript code without calling your API
+### Mock query : Test your javascript code without calling your API
 
 `cached-query` allows you to mock an external call in your automatic tests with the `mockQuery` method and 
 bypass the request to the server by returning a pre-programmed response.
@@ -125,7 +125,7 @@ preparedQuery("users", "https://randomuser.me/api/?seed=foobar&results=5")
 mockQuery("users", {results: []})
 
 function users() {
-    useQuery("users", (data, loading, error) => {
+    useQuery("users", (data, loading, error, response) => {
         if (loading == false) {
             console.log(data.results)
         }

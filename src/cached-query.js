@@ -9,6 +9,7 @@ export const cquery_cache = {};
  * @param key the key of the prepared query to replace
  * @param url the url of the request to replace
  * @param request_options the options of the request (see the options of the fetch method)
+ * @param options the options for prepared query as interval
  */
 export function preparedQuery(key, url, request_options = {}, options = {}) {
     if (key in cquery_cache) {
@@ -27,12 +28,21 @@ export function preparedQuery(key, url, request_options = {}, options = {}) {
         error: undefined,
         key: key,
         isLoading: false,
+        response: undefined,
         mock: false,
         url: url,
         request_options: request_options,
         invalidationStop: undefined,
         invalidationInterval: undefined
     };
+
+    if ('mock' in options) {
+        query.mock = true;
+        query.data = options.mock.data;
+        query.isLoading = options.mock.isLoading;
+        query.error = options.mock.error;
+        query.response = options.mock.response;
+    }
 
     if ('interval' in options) {
         _loopQuery(query, options.interval);
@@ -64,10 +74,10 @@ export function useQuery(key, callback) {
         _fetchFromQuery(query);
 
         query.callbacks.push(callback);
-        callback(query.data, query.isLoading, query.error);
+        callback(query.data, query.isLoading, query.error, query.response);
     } else {
         query.callbacks.push(callback);
-        callback(query.data, query.isLoading, query.error);
+        callback(query.data, query.isLoading, query.error, query.response);
     }
 }
 
@@ -94,7 +104,7 @@ export function invalidateQuery(key, interval = undefined) {
     }
 }
 
-export function mockQuery(key, data, isLoading = false, error = undefined) {
+export function mockQuery(key, data, isLoading = false, error = undefined, response = undefined) {
     _assertQueryExists(key);
 
     const query = cquery_cache[key];
@@ -102,6 +112,7 @@ export function mockQuery(key, data, isLoading = false, error = undefined) {
     query.data = data;
     query.isLoading = isLoading;
     query.error = error;
+    query.response = response;
 }
 
 function _assertQueryExists(key) {
@@ -114,7 +125,7 @@ function _assertQueryExists(key) {
 function _fetchFromQuery(query) {
     if (query.mock === true) {
         for (const _callback in query.callbacks) {
-            query.callbacks[_callback](query.data, query.isLoading, query.error);
+            query.callbacks[_callback](query.data, query.isLoading, query.error, query.response);
         }
         return;
     }
@@ -122,13 +133,16 @@ function _fetchFromQuery(query) {
     query.data = undefined;
     query.isLoading = true;
     fetch(query.url, query.request_options)
-        .then(res => res.json())
+        .then(res => {
+            query.response = res;
+            return res.json();
+        })
         .then(data => {
             query.isLoading = false;
             query.data = data;
             query.error = undefined;
             for (const _callback in query.callbacks) {
-                query.callbacks[_callback](query.data, query.isLoading, query.error);
+                query.callbacks[_callback](query.data, query.isLoading, query.error, query.response);
             }
         })
         .catch((error) => {
@@ -136,7 +150,7 @@ function _fetchFromQuery(query) {
             query.data = undefined;
             query.error = error;
             for (const _callback in query.callbacks) {
-                query.callbacks[_callback](query.data, query.isLoading, query.error);
+                query.callbacks[_callback](query.data, query.isLoading, query.error, query.response);
             }
       });
 }
