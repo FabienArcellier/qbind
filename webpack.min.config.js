@@ -2,10 +2,9 @@ const path = require('path');
 
 module.exports = {
   entry: './src/cached-query.js',
-  mode: 'development',
-  devtool: false,
+  mode: "production",
   output: {
-    filename: 'cached-query.js',
+    filename: 'cached-query.min.js',
     libraryTarget: 'window',
     path: path.resolve(__dirname, 'dist'),
   },
