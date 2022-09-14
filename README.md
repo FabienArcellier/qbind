@@ -20,6 +20,7 @@ I need a asynchronous state management module as [react-query](https://github.co
 * update all widgets when the request is invalidated and run again
 * regularly pull a data source and update all the widgets that use it (not implemented yet).
 * mock REST requests easily to perform unit test
+* process only the last request during cascading invalidations
 
 As I couldn't find a library that match this requirement for vanillajs, I decide to implement `cached-query`
 
@@ -134,6 +135,48 @@ function users() {
 
 /* use the mock instead of calling the api */
 users();
+```
+
+### Forward parameter to fetch
+
+The second argument of `preparedQuery` and `replaceQuery` contains the options for the fetch request.
+
+```javascript
+preparedQuery("users", "https://randomuser.me/api/?seed=foobar&results=5", {mode: 'cors'})
+
+function users() {
+    useQuery("users", (data, loading, error, response) => {
+        if (loading == false) {
+            console.log(data.results)
+        }
+    })
+}
+
+users();
+```
+
+### Trigger the callbacks for every invalidation
+
+By default, `cached-query` only returns the result of the last invalidation when several successive invalidations have been executed. 
+This behavior limits clipping by recovering incomplete data.
+
+If you need to call the callbacks for all invalidations, use the `postponeInvalidation: false` option.
+
+```javascript
+preparedQuery("users", "https://randomuser.me/api/?seed=foobar&results=5", {}, {postponeInvalidation: false})
+
+function users() {
+    useQuery("users", (data, loading, error, response) => {
+        if (loading == false) {
+            console.log(data.results)
+        }
+    })
+}
+
+users();
+
+// run the query once, and execute the callback of users and userByFender.
+invalidateQuery("users");
 ```
 
 ## The latest version

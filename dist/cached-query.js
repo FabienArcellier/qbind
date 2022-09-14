@@ -81,7 +81,9 @@ function preparedQuery(key, url, request_options = {}, options = {}) {
         url: url,
         request_options: request_options,
         invalidationStop: undefined,
-        invalidationInterval: undefined
+        invalidationInterval: undefined,
+        invalidationCounter: 0, // this attribute allow to post-pone callback when there is several successive invalidation
+        postponeInvalidation: options.postponeInvalidation || true // if invalidation happens during an invalidation, it wait for the last query to invoke the callbacks
     };
 
     if ('mock' in options) {
@@ -141,14 +143,13 @@ function invalidateQuery(key) {
     _assertQueryExists(key);
 
     const query = cquery_cache[key];
+    query.invalidationCounter += 1;
 
     if (query.data === undefined && query.isLoading === false) {
         return;
     }
 
-    if (query.isLoading === false) {
-        _fetchFromQuery(query);
-    }
+    _fetchFromQuery(query, true);
 }
 
 function mockQuery(key, data, isLoading = false, error = undefined, response = undefined) {
@@ -169,7 +170,7 @@ function _assertQueryExists(key) {
     }
 }
 
-function _fetchFromQuery(query) {
+function _fetchFromQuery(query, invalidation = false) {
     if (query.mock === true) {
         for (const _callback in query.callbacks) {
             query.callbacks[_callback](query.data, query.isLoading, query.error, query.response);
@@ -179,17 +180,30 @@ function _fetchFromQuery(query) {
 
     query.data = undefined;
     query.isLoading = true;
+    query.response = undefined;
+    query.error = undefined;
+
+    for (const _callback in query.callbacks) {
+        query.callbacks[_callback](query.data, query.isLoading, query.error, query.response);
+    }
+
     fetch(query.url, query.request_options)
         .then(res => {
             query.response = res;
             return res.json();
         })
         .then(data => {
-            query.isLoading = false;
-            query.data = data;
-            query.error = undefined;
-            for (const _callback in query.callbacks) {
-                query.callbacks[_callback](query.data, query.isLoading, query.error, query.response);
+            if (invalidation === true && query.invalidationCounter > 0) {
+                query.invalidationCounter -= 1;
+            }
+
+            if (query.invalidationCounter === 0 || query.postponeInvalidation === false) {
+                query.isLoading = false;
+                query.data = data;
+                query.error = undefined;
+                for (const _callback in query.callbacks) {
+                    query.callbacks[_callback](query.data, query.isLoading, query.error, query.response);
+                }
             }
         })
         .catch((error) => {
