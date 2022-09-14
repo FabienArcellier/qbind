@@ -18,7 +18,7 @@ I need a asynchronous state management module as [react-query](https://github.co
 * declare query as independant code
 * deduplicate REST requests if several widgets load the same data source
 * update all widgets when the request is invalidated and run again
-* regularly pull a data source and update all the widgets that use it (not implemented yet).
+* regularly pull a data source and update all the widgets that use it
 * mock REST requests easily to perform unit test
 * process only the last request during cascading invalidations
 
