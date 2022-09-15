@@ -118,14 +118,14 @@ function invalidateQuery(key) {
     const query = cquery_cache[key];
     query.invalidationCounter += 1;
 
-    if (query.data === undefined && query.isLoading === false) {
+    if (query.data === null && query.isLoading === false) {
         return;
     }
 
     _fetchFromQuery(query, true);
 }
 
-function mockQuery(key, data, isLoading = false, error = undefined, response = undefined) {
+function mockQuery(key, data, isLoading = false, error = null, response = null) {
     _assertQueryExists(key);
 
     const query = cquery_cache[key];
@@ -169,7 +169,7 @@ function useQuery(key, callback) {
     _assertQueryExists(key);
 
     const query = cquery_cache[key];
-    if (query.data === undefined && query.isLoading === false && query.error === undefined) {
+    if (query.data === null && query.isLoading === false && query.error === null) {
         _fetchFromQuery(query);
 
         query.callbacks.push(callback);
@@ -197,10 +197,10 @@ function _fetchFromQuery(query, invalidation = false) {
         return;
     }
 
-    query.data = undefined;
+    query.data = null;
     query.isLoading = true;
-    query.response = undefined;
-    query.error = undefined;
+    query.response = null;
+    query.error = null;
 
     for (const _callback in query.callbacks) {
         query.callbacks[_callback](query.data, query.isLoading, query.error, query.response);
@@ -219,7 +219,7 @@ function _fetchFromQuery(query, invalidation = false) {
             if (query.invalidationCounter === 0 || query.postponeInvalidation === false) {
                 query.isLoading = false;
                 query.data = data;
-                query.error = undefined;
+                query.error = null;
                 for (const _callback in query.callbacks) {
                     query.callbacks[_callback](query.data, query.isLoading, query.error, query.response);
                 }
@@ -227,7 +227,7 @@ function _fetchFromQuery(query, invalidation = false) {
         })
         .catch((error) => {
             query.isLoading = false;
-            query.data = undefined;
+            query.data = null;
             query.error = error;
             for (const _callback in query.callbacks) {
                 query.callbacks[_callback](query.data, query.isLoading, query.error, query.response);
