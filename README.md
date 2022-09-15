@@ -179,6 +179,26 @@ users();
 invalidateQuery("users");
 ```
 
+### Change the behavior of an existing query
+
+The `replaceQuery` method reconfigures an existing query. 
+It is possible to make an existing query recurrent, for example to run it every 60 seconds.
+
+```javascript
+preparedQuery('users', "https://randomuser.me/api/?seed=foobar&results=5", {}, {});
+replaceQuery('users', "https://randomuser.me/api/?seed=foobar&results=5", {}, {interval: 60});
+
+function users() {
+    useQuery("users", (data, loading, error, response) => {
+        if (loading == false) {
+            console.log(data.results)
+        }
+    })
+}
+
+users();
+```
+
 ## The latest version
 
 You can find the latest version to ...
@@ -193,7 +213,9 @@ git clone https://github.com/FabienArcellier/cached-query.git
 
 ### Tests
 
-[soon]
+```javascript
+npm test
+```
 
 ### Contributing
 
