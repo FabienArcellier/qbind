@@ -8,26 +8,20 @@
 <body>
 <div class="container w-96">
   <div class="" id="toolbar">
-    <button class="bg-gray-300 m-[8px] p-[8px] rounded-[4px]">
+    <button id="online__actions__refresh" class="bg-gray-300 m-2 p-2 rounded-1">
       Refresh
     </button>
   </div>
-  <div class="font-bold" id="online_counter__block">
-    <div id="online_counter_label" class="m-[8px]">loading ...</div>
-  </div>
-  <div class="" id="online_list">
-    <div class="m-[8px]">
-      <div id="online_list__loading"></div>
-      <div id="online_list__block"></div>
-    </div>
-
-  </div>
+  <div id="online__loading">Loading ...</div>
+  <div class="m-2 font-bold" id="online__counter"></div>
+  <div class="m-2" id="online__list"></div>
 </div>
 
-<script src="https://unpkg.com/cached-query/dist/cached-query.min.js"></script>
+<script src="https://unpkg.com/cached-query/dist/cached-query.js"></script>
 <script src="query.js"></script>
-<script src="online_list.js"></script>
-<script src="online_counter.js"></script>
-<script src="toolbar.js"></script>
+<script src="online__loading.js"></script>
+<script src="online__list.js"></script>
+<script src="online__counter.js"></script>
+<script src="online__toolbar.js"></script>
 </body>
 </html>

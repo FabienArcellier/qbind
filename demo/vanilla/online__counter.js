@@ -1,16 +1,16 @@
-function online_counter() {
+function online__counter() {
     useQuery("users", (data, loading, error, response) => {
-        let online_counter_label = document.getElementById("online_counter_label");
+        let online_counter = document.getElementById("online__counter");
         if (loading === false) {
             if ("results" in data) {
                 const online_users = data.results;
                 const online_users_counter = online_users.length;
-                online_counter_label.innerText = `${online_users_counter} users online`;
+                online_counter.innerText = `${online_users_counter} users online`;
             }
         } else {
-            online_counter_label.innerText = "loading ...";
+            online_counter.innerText = "";
         }
     });
 }
 
-online_counter();
+online__counter();
