@@ -67,9 +67,7 @@ export function invalidateQuery(key) {
     _assertQueryExists(key);
 
     const query = cquery_cache[key];
-    query.invalidationCounter += 1;
-
-    if (query.data === null && query.isLoading === false) {
+    if (query.data === null && query.isLoading === true) {
         return;
     }
 
@@ -153,6 +151,10 @@ function _fetchFromQuery(query, invalidation = false) {
     query.response = null;
     query.error = null;
 
+    if (invalidation === true) {
+        query.invalidationCounter += 1;
+    }
+
     for (const _callback in query.callbacks) {
         query.callbacks[_callback](query.data, query.isLoading, query.error, query.response);
     }
@@ -177,6 +179,10 @@ function _fetchFromQuery(query, invalidation = false) {
             }
         })
         .catch((error) => {
+            if (invalidation === true && query.invalidationCounter > 0) {
+                query.invalidationCounter -= 1;
+            }
+
             query.isLoading = false;
             query.data = null;
             query.error = error;

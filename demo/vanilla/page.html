@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Online users</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body>
+<div class="container w-96">
+  <div class="" id="toolbar">
+    <button id="online__actions__refresh" class="bg-gray-300 m-2 p-2 rounded-1">
+      Refresh
+    </button>
+  </div>
+  <div id="online__loading">Loading ...</div>
+  <div class="m-2 font-bold" id="online__counter"></div>
+  <div class="m-2" id="online__list"></div>
+</div>
+
+<script src="https://unpkg.com/cached-query/dist/cached-query.js"></script>
+<script src="query.js"></script>
+<script src="online__loading.js"></script>
+<script src="online__list.js"></script>
+<script src="online__counter.js"></script>
+<script src="online__toolbar.js"></script>
+</body>
+</html>

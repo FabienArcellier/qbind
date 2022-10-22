@@ -1,0 +1,28 @@
+root = true
+
+[*]
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+charset = utf-8
+indent_style = space
+indent_size = 4
+
+# JSON Files
+[*.{json,webmanifest}]
+indent_size = 2
+
+# YAML Files
+[*.{yml,yaml}]
+indent_size = 2
+
+# Markdown Files
+[*.{md,mdx}]
+trim_trailing_whitespace = false
+
+# Web Files
+[*.{htm,html,css,sass,scss,less}]
+indent_size = 2
+
+[Makefile]
+indent_style = tab
