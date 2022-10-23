@@ -48,6 +48,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */   "mockQuery": () => (/* binding */ mockQuery),
 /* harmony export */   "preparedQuery": () => (/* binding */ preparedQuery),
 /* harmony export */   "replaceQuery": () => (/* binding */ replaceQuery),
+/* harmony export */   "replaceQueryDefaultEngine": () => (/* binding */ replaceQueryDefaultEngine),
 /* harmony export */   "resetContext": () => (/* binding */ resetContext),
 /* harmony export */   "useQuery": () => (/* binding */ useQuery)
 /* harmony export */ });
@@ -95,7 +96,7 @@ function preparedQuery(key, url, request_options = {}, options = {}) {
         invalidationInterval: null,
         invalidationCounter: 0, // this attribute allow to post-pone callback when there is several successive invalidation
         postponeInvalidation: options.postponeInvalidation || true, // if invalidation happens during an invalidation, it wait for the last query to invoke the callbacks
-        engine: options.engine || _defaultEngine
+        engine: options.engine || null
     };
 
     if ('mock' in options) {
@@ -210,6 +211,10 @@ function replaceQuery(key, url, request_options = {}, options = {}) {
     }
 }
 
+function replaceQueryDefaultEngine(engine) {
+    _defaultEngine = engine;
+}
+
 /**
  * resets the internal state of the library to be able to run automatic tests.
  *
@@ -250,9 +255,9 @@ function _assertQueryExists(key) {
 
 function _fetchFromQuery(query, invalidation = false) {
 
-    /* Quand la requete est remplacée par un mock, l'etape de chargement est évité.
-     * Comme le mock est déjà stocké dans les attributs data, isLoading, response et error, il ne faut pas venir
-     * les surcharger.
+    /* When the request is replaced by a mock, the loading step is skipped.
+     * As the mock is already stored in the data, isLoading, response and error attributes,
+     * it should not overload them.
      */
     query.invalidationCounter += 1;
     if (query.mock !== true) {
@@ -266,7 +271,13 @@ function _fetchFromQuery(query, invalidation = false) {
         }
     }
 
-    query.engine(query);
+    if (query.mock === true) {
+        mockEngine(query);
+    } else if (query.engine !== null) {
+        query.engine(query);
+    } else {
+        _defaultEngine(query);
+    }
 }
 
 function _loopQuery(query, interval) {
@@ -283,7 +294,6 @@ function _loopQueryStop(query) {
 }
 
 function _mockQuery(query, options) {
-    query.engine = mockEngine;
     query.mock = true;
     query.data = options.mock.data;
     query.isLoading = options.mock.isLoading;
