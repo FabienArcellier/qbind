@@ -10,6 +10,10 @@ This library is inspired from :
 * [React-query](https://tanstack.com/query/v4)
 * [Apollo Graphql](https://www.apollographql.com/)
 
+## Demo
+
+* [Vanilla.js](https://fabienarcellier.github.io/cached-query/demo/vanilla/) / [code](./demo/vanilla)
+
 ## Motivation
 
 I wanted to use a frontend library [Alpine.js](https://alpinejs.dev/), lighter than React or Vue.js, to make interactive interface.
