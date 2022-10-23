@@ -41,7 +41,8 @@ export function preparedQuery(key, url, request_options = {}, options = {}) {
         invalidationStop: null,
         invalidationInterval: null,
         invalidationCounter: 0, // this attribute allow to post-pone callback when there is several successive invalidation
-        postponeInvalidation: options.postponeInvalidation || true // if invalidation happens during an invalidation, it wait for the last query to invoke the callbacks
+        postponeInvalidation: options.postponeInvalidation || true, // if invalidation happens during an invalidation, it wait for the last query to invoke the callbacks
+        engine: options.engine || null
     };
 
     if ('mock' in options) {
@@ -74,6 +75,48 @@ export function invalidateQuery(key) {
     _fetchFromQuery(query, true);
 }
 
+/**
+ * This method is used in the query engine to update subscriptions when data is loaded
+ * or the query fails
+ *
+ * @param query
+ * @param data
+ * @param error
+ * @param response
+ */
+export function invokeSubscriptions(query, data, error, response) {
+    query.invalidationCounter -= 1;
+
+    if (query.invalidationCounter === 0 || query.postponeInvalidation === false) {
+        query.isLoading = false;
+        query.data = data;
+        query.error = error;
+        query.response = response;
+        for (const _callback in query.callbacks) {
+            query.callbacks[_callback](query.data, query.isLoading, query.error, query.response);
+        }
+    }
+}
+
+export function fetchJsonEngine(query) {
+    let response = null;
+    fetch(query.url, query.request_options)
+        .then(res => {
+            response = res;
+            return res.json();
+        })
+        .then(data => {
+            invokeSubscriptions(query, data, null, response);
+        })
+        .catch((error) => {
+            invokeSubscriptions(query, null, error, response);
+        });
+}
+
+export function mockEngine(query) {
+    invokeSubscriptions(query, query.data, query.error, query.response);
+}
+
 export function mockQuery(key, data, isLoading = false, error = null, response = null) {
     _assertQueryExists(key);
 
@@ -99,6 +142,7 @@ export function replaceQuery(key, url, request_options = {}, options = {}) {
     let query = cquery_cache[key];
     query.url = url;
     query.request_options = request_options;
+    query.engine = options.engine || _defaultEngine
 
     if ('mock' in options) {
         _mockQuery(query, options);
@@ -113,21 +157,38 @@ export function replaceQuery(key, url, request_options = {}, options = {}) {
     }
 }
 
+export function replaceQueryDefaultEngine(engine) {
+    _defaultEngine = engine;
+}
+
+/**
+ * resets the internal state of the library to be able to run automatic tests.
+ *
+ * This function is not part of the public API.
+ */
+export function resetContext() {
+    _defaultEngine = fetchJsonEngine;
+    clearQueries();
+}
 
 export function useQuery(key, callback) {
     _assertQueryExists(key);
 
     const query = cquery_cache[key];
     if (query.data === null && query.isLoading === false && query.error === null) {
+        query.callbacks.push(callback);
         _fetchFromQuery(query);
 
-        query.callbacks.push(callback);
-        callback(query.data, query.isLoading, query.error, query.response);
+        // callback(query.data, query.isLoading, query.error, query.response);
     } else {
         query.callbacks.push(callback);
         callback(query.data, query.isLoading, query.error, query.response);
     }
 }
+
+/* Internal attributes */
+
+let _defaultEngine = fetchJsonEngine;
 
 /* Private functions */
 
@@ -139,57 +200,30 @@ function _assertQueryExists(key) {
 }
 
 function _fetchFromQuery(query, invalidation = false) {
-    if (query.mock === true) {
+
+    /* When the request is replaced by a mock, the loading step is skipped.
+     * As the mock is already stored in the data, isLoading, response and error attributes,
+     * it should not overload them.
+     */
+    query.invalidationCounter += 1;
+    if (query.mock !== true) {
+        query.data = null;
+        query.isLoading = true;
+        query.response = null;
+        query.error = null;
+
         for (const _callback in query.callbacks) {
             query.callbacks[_callback](query.data, query.isLoading, query.error, query.response);
         }
-        return;
     }
 
-    query.data = null;
-    query.isLoading = true;
-    query.response = null;
-    query.error = null;
-
-    if (invalidation === true) {
-        query.invalidationCounter += 1;
+    if (query.mock === true) {
+        mockEngine(query);
+    } else if (query.engine !== null) {
+        query.engine(query);
+    } else {
+        _defaultEngine(query);
     }
-
-    for (const _callback in query.callbacks) {
-        query.callbacks[_callback](query.data, query.isLoading, query.error, query.response);
-    }
-
-    fetch(query.url, query.request_options)
-        .then(res => {
-            query.response = res;
-            return res.json();
-        })
-        .then(data => {
-            if (invalidation === true && query.invalidationCounter > 0) {
-                query.invalidationCounter -= 1;
-            }
-
-            if (query.invalidationCounter === 0 || query.postponeInvalidation === false) {
-                query.isLoading = false;
-                query.data = data;
-                query.error = null;
-                for (const _callback in query.callbacks) {
-                    query.callbacks[_callback](query.data, query.isLoading, query.error, query.response);
-                }
-            }
-        })
-        .catch((error) => {
-            if (invalidation === true && query.invalidationCounter > 0) {
-                query.invalidationCounter -= 1;
-            }
-
-            query.isLoading = false;
-            query.data = null;
-            query.error = error;
-            for (const _callback in query.callbacks) {
-                query.callbacks[_callback](query.data, query.isLoading, query.error, query.response);
-            }
-        });
 }
 
 function _loopQuery(query, interval) {

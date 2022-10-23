@@ -41,10 +41,14 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   "clearQueries": () => (/* binding */ clearQueries),
 /* harmony export */   "cquery_cache": () => (/* binding */ cquery_cache),
+/* harmony export */   "fetchJsonEngine": () => (/* binding */ fetchJsonEngine),
 /* harmony export */   "invalidateQuery": () => (/* binding */ invalidateQuery),
+/* harmony export */   "invokeSubscriptions": () => (/* binding */ invokeSubscriptions),
+/* harmony export */   "mockEngine": () => (/* binding */ mockEngine),
 /* harmony export */   "mockQuery": () => (/* binding */ mockQuery),
 /* harmony export */   "preparedQuery": () => (/* binding */ preparedQuery),
 /* harmony export */   "replaceQuery": () => (/* binding */ replaceQuery),
+/* harmony export */   "resetContext": () => (/* binding */ resetContext),
 /* harmony export */   "useQuery": () => (/* binding */ useQuery)
 /* harmony export */ });
 const cquery_cache = {};
@@ -90,7 +94,8 @@ function preparedQuery(key, url, request_options = {}, options = {}) {
         invalidationStop: null,
         invalidationInterval: null,
         invalidationCounter: 0, // this attribute allow to post-pone callback when there is several successive invalidation
-        postponeInvalidation: options.postponeInvalidation || true // if invalidation happens during an invalidation, it wait for the last query to invoke the callbacks
+        postponeInvalidation: options.postponeInvalidation || true, // if invalidation happens during an invalidation, it wait for the last query to invoke the callbacks
+        engine: options.engine || _defaultEngine
     };
 
     if ('mock' in options) {
@@ -123,6 +128,48 @@ function invalidateQuery(key) {
     _fetchFromQuery(query, true);
 }
 
+/**
+ * This method is used in the query engine to update subscriptions when data is loaded
+ * or the query fails
+ *
+ * @param query
+ * @param data
+ * @param error
+ * @param response
+ */
+function invokeSubscriptions(query, data, error, response) {
+    query.invalidationCounter -= 1;
+
+    if (query.invalidationCounter === 0 || query.postponeInvalidation === false) {
+        query.isLoading = false;
+        query.data = data;
+        query.error = error;
+        query.response = response;
+        for (const _callback in query.callbacks) {
+            query.callbacks[_callback](query.data, query.isLoading, query.error, query.response);
+        }
+    }
+}
+
+function fetchJsonEngine(query) {
+    let response = null;
+    fetch(query.url, query.request_options)
+        .then(res => {
+            response = res;
+            return res.json();
+        })
+        .then(data => {
+            invokeSubscriptions(query, data, null, response);
+        })
+        .catch((error) => {
+            invokeSubscriptions(query, null, error, response);
+        });
+}
+
+function mockEngine(query) {
+    invokeSubscriptions(query, query.data, query.error, query.response);
+}
+
 function mockQuery(key, data, isLoading = false, error = null, response = null) {
     _assertQueryExists(key);
 
@@ -148,6 +195,7 @@ function replaceQuery(key, url, request_options = {}, options = {}) {
     let query = cquery_cache[key];
     query.url = url;
     query.request_options = request_options;
+    query.engine = options.engine || _defaultEngine
 
     if ('mock' in options) {
         _mockQuery(query, options);
@@ -162,21 +210,34 @@ function replaceQuery(key, url, request_options = {}, options = {}) {
     }
 }
 
+/**
+ * resets the internal state of the library to be able to run automatic tests.
+ *
+ * This function is not part of the public API.
+ */
+function resetContext() {
+    _defaultEngine = fetchJsonEngine;
+    clearQueries();
+}
 
 function useQuery(key, callback) {
     _assertQueryExists(key);
 
     const query = cquery_cache[key];
     if (query.data === null && query.isLoading === false && query.error === null) {
+        query.callbacks.push(callback);
         _fetchFromQuery(query);
 
-        query.callbacks.push(callback);
-        callback(query.data, query.isLoading, query.error, query.response);
+        // callback(query.data, query.isLoading, query.error, query.response);
     } else {
         query.callbacks.push(callback);
         callback(query.data, query.isLoading, query.error, query.response);
     }
 }
+
+/* Internal attributes */
+
+let _defaultEngine = fetchJsonEngine;
 
 /* Private functions */
 
@@ -188,57 +249,24 @@ function _assertQueryExists(key) {
 }
 
 function _fetchFromQuery(query, invalidation = false) {
-    if (query.mock === true) {
+
+    /* Quand la requete est remplacée par un mock, l'etape de chargement est évité.
+     * Comme le mock est déjà stocké dans les attributs data, isLoading, response et error, il ne faut pas venir
+     * les surcharger.
+     */
+    query.invalidationCounter += 1;
+    if (query.mock !== true) {
+        query.data = null;
+        query.isLoading = true;
+        query.response = null;
+        query.error = null;
+
         for (const _callback in query.callbacks) {
             query.callbacks[_callback](query.data, query.isLoading, query.error, query.response);
         }
-        return;
     }
 
-    query.data = null;
-    query.isLoading = true;
-    query.response = null;
-    query.error = null;
-
-    if (invalidation === true) {
-        query.invalidationCounter += 1;
-    }
-
-    for (const _callback in query.callbacks) {
-        query.callbacks[_callback](query.data, query.isLoading, query.error, query.response);
-    }
-
-    fetch(query.url, query.request_options)
-        .then(res => {
-            query.response = res;
-            return res.json();
-        })
-        .then(data => {
-            if (invalidation === true && query.invalidationCounter > 0) {
-                query.invalidationCounter -= 1;
-            }
-
-            if (query.invalidationCounter === 0 || query.postponeInvalidation === false) {
-                query.isLoading = false;
-                query.data = data;
-                query.error = null;
-                for (const _callback in query.callbacks) {
-                    query.callbacks[_callback](query.data, query.isLoading, query.error, query.response);
-                }
-            }
-        })
-        .catch((error) => {
-            if (invalidation === true && query.invalidationCounter > 0) {
-                query.invalidationCounter -= 1;
-            }
-
-            query.isLoading = false;
-            query.data = null;
-            query.error = error;
-            for (const _callback in query.callbacks) {
-                query.callbacks[_callback](query.data, query.isLoading, query.error, query.response);
-            }
-        });
+    query.engine(query);
 }
 
 function _loopQuery(query, interval) {
@@ -255,6 +283,7 @@ function _loopQueryStop(query) {
 }
 
 function _mockQuery(query, options) {
+    query.engine = mockEngine;
     query.mock = true;
     query.data = options.mock.data;
     query.isLoading = options.mock.isLoading;

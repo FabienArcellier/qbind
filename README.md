@@ -1,6 +1,6 @@
 # cached-query
 
-powerful asynchronous data fetching management for vanillajs. 
+powerful asynchronous data fetching management for vanillajs.
 
 **This library is experimental**. Its API is likely to evolve between 2 versions. It covers one of my specific requirements.
 I am not sure to maintain this library yet.
@@ -198,6 +198,37 @@ function users() {
 
 users();
 ```
+
+### Replace the default query engine, Fetch + json with Axios or Fetch + xml
+
+To define a new engine, you must write a javascript function that takes a query object as a parameter.
+An engine should always invoke the ``invokeSubscriptions`` function from the response it retrieves. 
+This will trigger the execution of the subscriptions of this query.
+
+The `replaceQueryDefaultEngine` function replaces the query engine for all queries.
+
+```javascript
+export function customAxiosEngine(query) {
+    axios.get(query.url)
+      .then(function (response) {
+          invokeSubscriptions(query, response.data, null, response);
+      })
+      .catch(function (error) {
+          invokeSubscriptions(query, null, error, null);
+      })
+}
+
+replaceQueryDefaultEngine(customAxiosEngine)
+```
+
+``preparedQuery`` and ``replaceQuery`` accept also an ``engine`` option to specify 
+a specific query engine for a specific query.
+
+```javascript
+preparedQuery('users', "https://randomuser.me/api/?seed=foobar&results=5", {}, {engine: customAxiosEngine});
+```
+
+``cached-query`` implements 2 engines that you can use for inspiration ``fetchJsonEngine`` and ``mockEngine``.
 
 ## The latest version
 
