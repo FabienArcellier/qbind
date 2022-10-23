@@ -1,0 +1,33 @@
+name: ci
+
+on: [ push, pull_request ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [ 16.x ]
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - uses: actions/setup-node@v1
+        with:
+          node-version: ${{ matrix.node-version }}
+
+      - name: continuous integration process
+        run: npm install --dev
+        env:
+          CI: true
+
+      - name: continuous integration process
+        run: npm run build
+        env:
+          CI: true
+
+      - name: continuous integration process
+        run: npm run test
+        env:
+          CI: true
