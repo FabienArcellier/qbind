@@ -244,10 +244,6 @@ You can find the latest version to ...
 git clone https://github.com/FabienArcellier/cached-query.git
 ```
 
-## Continuous integration
-
-[soon]
-
 ### Tests
 
 ```javascript
