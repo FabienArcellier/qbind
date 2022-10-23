@@ -1,5 +1,7 @@
 # cached-query
 
+[![ci](https://github.com/FabienArcellier/cached-query/actions/workflows/main.yml/badge.svg)](https://github.com/FabienArcellier/cached-query/actions/workflows/main.yml) [![npm version](https://badge.fury.io/js/cached-query.svg)](https://badge.fury.io/js/cached-query)
+
 powerful asynchronous data fetching management for vanillajs.
 
 **This library is experimental**. Its API is likely to evolve between 2 versions. It covers one of my specific requirements.
@@ -12,7 +14,7 @@ This library is inspired from :
 
 ## Demo
 
-* [Vanilla.js](https://fabienarcellier.github.io/cached-query/demo/vanilla/) / [code](./demo/vanilla)
+* [Vanilla.js](https://fabienarcellier.github.io/cached-query/demo/vanilla/) / [[code](./demo/vanilla)]
 
 ## Motivation
 
