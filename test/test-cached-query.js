@@ -38,7 +38,7 @@ describe('cached-query', function () {
 
         it('should run a new query on recurring basis (every 5 seconds)', function () {
             /* Given */
-            preparedQuery('users', "https://yolo", {}, {interval: 5, mock: {data: {"hello": "world"}}});
+            preparedQuery('users', "https://yolo", {}, {interval: 5, mock: {data: {"hello": "world"}, isLoading: false}});
 
             let count = 0;
             useQuery("users", (data) => {
@@ -51,6 +51,40 @@ describe('cached-query', function () {
 
             /* Then */
             assert.equal(count, 2);
+        });
+
+        it('should run a new query on recurring basis only if the query has been loaded', function () {
+            /* Given */
+            preparedQuery('users', "https://yolo", {}, {interval: 5, mock: {data: null, isLoading: true}});
+
+            let count = 0;
+            useQuery("users", (data, isLoading) => {
+                count += 1;
+            });
+
+            assert.equal(count, 1);
+            /* When */
+            clock.tick(12000);
+
+            /* Then */
+            assert.equal(count, 1);
+        });
+
+        it('should run a new query on recurring basis even if the query is loading', function () {
+            /* Given */
+            preparedQuery('users', "https://yolo", {}, {interval: 5, mock: {data: null, isLoading: true}, delayedLoading: false});
+
+            let count = 0;
+            useQuery("users", (data, isLoading) => {
+                count += 1;
+            });
+
+            assert.equal(count, 1);
+            /* When */
+            clock.tick(12000);
+
+            /* Then */
+            assert.equal(count, 3);
         });
     });
 
@@ -92,7 +126,7 @@ describe('cached-query', function () {
             assert.equal(count, 1);
 
             /* When */
-            replaceQuery('users', "https://yolo", {}, {interval: 5, mock: {data: {"hello": "world"}}});
+            replaceQuery('users', "https://yolo", {}, {interval: 5, mock: {data: {"hello": "world"}, isLoading: false}});
 
             /* Then */
             assert.equal(count, 2);
@@ -102,7 +136,7 @@ describe('cached-query', function () {
         });
         it('should slow down a query (from every 5 seconds to every 1 minute)', function () {
             /* Given */
-            preparedQuery('users', "https://yolo", {}, {interval: 5, mock: {data: {"hello": "world"}}});
+            preparedQuery('users', "https://yolo", {}, {interval: 5, mock: {data: {"hello": "world"}, isLoading: false}});
 
             let count = 0;
             useQuery("users", (data) => {
@@ -114,7 +148,7 @@ describe('cached-query', function () {
             assert.equal(count, 6);
 
             /* When */
-            replaceQuery('users', "https://yolo", {}, {interval: 60, mock: {data: {"hello": "world"}}});
+            replaceQuery('users', "https://yolo", {}, {interval: 60, mock: {data: {"hello": "world"}, isLoading: false}});
 
             /* Then */
             assert.equal(count, 7);
@@ -124,7 +158,7 @@ describe('cached-query', function () {
         });
         it('should stop a query that stop on recurring basis', function () {
             /* Given */
-            preparedQuery('users', "https://yolo", {}, {interval: 5, mock: {data: {"hello": "world"}}});
+            preparedQuery('users', "https://yolo", {}, {interval: 5, mock: {data: {"hello": "world"}, isLoading: false}});
 
             let count = 0;
             useQuery("users", (data) => {

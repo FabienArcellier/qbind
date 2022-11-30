@@ -16,6 +16,11 @@ export function clearQueries() {
  * @param url the url of the request to replace
  * @param request_options the options of the request (see the options of the fetch method)
  * @param options the options for prepared query as interval
+ *  interval - run this query every {{interval}} seconds when interval is defined (default: null)
+ *  mock - return the mock instead of calling the server when mock is defined (default: null)
+ *  postponeInvalidation - default: true
+ *  engine - use alternative query engine when it's define (default: null)
+ *  delayedLoading - delay the next query on recursive query to next tick if loading is still in progress (default: true)
  */
 export function preparedQuery(key, url, request_options = {}, options = {}) {
     if (key in cquery_cache) {
@@ -41,15 +46,20 @@ export function preparedQuery(key, url, request_options = {}, options = {}) {
         invalidationStop: null,
         invalidationInterval: null,
         invalidationCounter: 0, // this attribute allow to post-pone callback when there is several successive invalidation
-        postponeInvalidation: options.postponeInvalidation || true, // if invalidation happens during an invalidation, it wait for the last query to invoke the callbacks
-        engine: options.engine || null
+        postponeInvalidation: options.postponeInvalidation || true, // if invalidation happens during a query, it wait for the last query to invoke the callbacks
+        engine: options.engine || null,
+        delayedLoading: true
     };
 
-    if ('mock' in options) {
+    if ('delayedLoading' in options) {
+        query.delayedLoading = options.delayedLoading
+    }
+
+    if ('mock' in options && options.mock !== null) {
         _mockQuery(query, options);
     }
 
-    if ('interval' in options) {
+    if ('interval' in options && options.interval !== null) {
         _loopQuery(query, options.interval);
     }
 
@@ -230,7 +240,11 @@ function _loopQuery(query, interval) {
     _loopQueryStop(query);
 
     query.invalidationStop = setTimeout(() => _loopQuery(query, interval), interval * 1000);
-    _fetchFromQuery(query);
+
+    // Si une requete est déjà en cours, il ne faut pas la réexécuter
+    if (query.isLoading === false || query.delayedLoading === false) {
+        _fetchFromQuery(query);
+    }
 }
 
 function _loopQueryStop(query) {
