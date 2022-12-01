@@ -91,12 +91,12 @@ In some case, you have a query that is not ready. It requires an external argume
 
 ```javascript
 function users() {
-    delayedQuery("users", (data, loading, error, response) => {
+    subscribeQuery("users", (data, loading, error, response) => {
         if (loading == false) {
             console.log(data.results)
         }
     });
-    
+
     users(); // nothing happens
     invalidateQuery("users");
 }
@@ -220,6 +220,35 @@ function users() {
 }
 
 users();
+```
+
+### Query propagation : Remove a callback
+
+```javascript
+preparedQuery('users', "https://randomuser.me/api/?seed=foobar&results=5", {}, {});
+
+useQuery("users", (data, loading, error, response, stopCallback) => {
+    if (loading == false) {
+        console.log(data.results)
+    }
+    
+    if (data !== null) {
+        map = //...
+    }
+    
+    if (map !== null) {
+        stopCallback.set()
+    }
+})
+
+
+/**
+ * once the invocation of the stopCallback takes place, 
+ * the callback is no longer executed
+ */
+invalidateQuery("users");
+invalidateQuery("users");
+
 ```
 
 ### Replace the default query engine, Fetch + json with Axios or Fetch + xml

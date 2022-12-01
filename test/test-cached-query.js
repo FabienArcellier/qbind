@@ -1,5 +1,5 @@
 var assert = require('assert');
-const {preparedQuery, invalidateQuery, useQuery, replaceQuery, invokeSubscriptions, resetContext, replaceQueryDefaultEngine, delayedQuery} = require("../src/cached-query");
+const {preparedQuery, invalidateQuery, useQuery, replaceQuery, invokeSubscriptions, resetContext, replaceQueryDefaultEngine, subscribeQuery} = require("../src/cached-query");
 const sinon = require('sinon');
 
 describe('cached-query', function () {
@@ -202,12 +202,12 @@ describe('cached-query', function () {
         });
     });
 
-    describe("delayedQuery", function() {
+    describe("subscribeQuery", function() {
         it('should not execute the query before invalidation happens', () => {
             preparedQuery('users', "https://yolo", {}, {mock: {data: {"hello": "world"}, isLoading: false}});
 
             let count = 0;
-            delayedQuery("users", (data) => {
+            subscribeQuery("users", (data) => {
                 count += 1;
             });
 
@@ -218,10 +218,26 @@ describe('cached-query', function () {
             preparedQuery('users', "https://yolo", {}, {mock: {data: {"hello": "world"}, isLoading: false}});
 
             let count = 0;
-            delayedQuery("users", (data) => {
+            subscribeQuery("users", (data) => {
                 count += 1;
             });
 
+            invalidateQuery('users');
+
+            assert.equal(count, 1);
+        });
+
+        it('should not execute the query after the callback has been stopped', () => {
+            preparedQuery('users', "https://yolo", {}, {mock: {data: {"hello": "world"}, isLoading: false}});
+
+            let count = 0;
+            subscribeQuery("users", (data, isLoading, error, response, stopCallback) => {
+                count += 1;
+                stopCallback.set();
+            });
+
+            invalidateQuery('users');
+            invalidateQuery('users');
             invalidateQuery('users');
 
             assert.equal(count, 1);
