@@ -41,7 +41,6 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   "clearQueries": () => (/* binding */ clearQueries),
 /* harmony export */   "cquery_cache": () => (/* binding */ cquery_cache),
-/* harmony export */   "delayedQuery": () => (/* binding */ delayedQuery),
 /* harmony export */   "fetchJsonEngine": () => (/* binding */ fetchJsonEngine),
 /* harmony export */   "invalidateQuery": () => (/* binding */ invalidateQuery),
 /* harmony export */   "invokeSubscriptions": () => (/* binding */ invokeSubscriptions),
@@ -51,6 +50,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */   "replaceQuery": () => (/* binding */ replaceQuery),
 /* harmony export */   "replaceQueryDefaultEngine": () => (/* binding */ replaceQueryDefaultEngine),
 /* harmony export */   "resetContext": () => (/* binding */ resetContext),
+/* harmony export */   "subscribeQuery": () => (/* binding */ subscribeQuery),
 /* harmony export */   "useQuery": () => (/* binding */ useQuery)
 /* harmony export */ });
 const cquery_cache = {};
@@ -158,7 +158,8 @@ function invokeSubscriptions(query, data, error, response) {
         query.error = error;
         query.response = response;
         for (const _callback in query.callbacks) {
-            query.callbacks[_callback](query.data, query.isLoading, query.error, query.response);
+            const callback = query.callbacks[_callback];
+            _invokeCallback(callback, query)
         }
     }
 }
@@ -238,6 +239,12 @@ function resetContext() {
     clearQueries();
 }
 
+/**
+ * Registers a request callback but execute the query.
+ *
+ * @param key
+ * @param callback
+ */
 function useQuery(key, callback) {
     _assertQueryExists(key);
 
@@ -249,18 +256,18 @@ function useQuery(key, callback) {
         // callback(query.data, query.isLoading, query.error, query.response);
     } else {
         query.callbacks.push(callback);
-        callback(query.data, query.isLoading, query.error, query.response);
+        _invokeCallback(callback, query)
     }
 }
 
 /**
- * Registers a request callback but does not execute it. You have to either wait for an invalidation, or wait for
+ * Registers a request callback but does not execute the query. You have to either wait for an invalidation, or wait for
  * the query is prepared with useQuery
  *
  * @param key
  * @param callback
  */
-function delayedQuery(key, callback) {
+function subscribeQuery(key, callback) {
     _assertQueryExists(key);
 
     const query = cquery_cache[key];
@@ -268,7 +275,7 @@ function delayedQuery(key, callback) {
         query.callbacks.push(callback);
     } else {
         query.callbacks.push(callback);
-        callback(query.data, query.isLoading, query.error, query.response);
+        _invokeCallback(callback, query);
     }
 }
 
@@ -299,14 +306,16 @@ function _fetchFromQuery(query, invalidation = false) {
         query.error = null;
 
         for (const _callback in query.callbacks) {
-            query.callbacks[_callback](query.data, query.isLoading, query.error, query.response);
+            const callback = query.callbacks[_callback];
+            _invokeCallback(callback, query);
         }
     }
 
     if (query.mock === true && query.mockIsLoading === true) {
         query.isLoading = query.mockIsLoading;
         for (const _callback in query.callbacks) {
-            query.callbacks[_callback](query.mockData, query.mockIsLoading, query.mockError, query.mockResponse);
+            const callback = query.callbacks[_callback];
+            _invokeCallbackMock(callback, query);
         }
     } else if (query.mock === true) {
         mockEngine(query);
@@ -317,12 +326,28 @@ function _fetchFromQuery(query, invalidation = false) {
     }
 }
 
+function _invokeCallback(callback, query) {
+    let stopEvent = new _stopCallback();
+    callback(query.data, query.isLoading, query.error, query.response, stopEvent);
+    if (stopEvent.triggered === true) {
+        _removeCallback(query, callback);
+    }
+}
+
+function _invokeCallbackMock(callback, query) {
+    let stopEvent = new _stopCallback();
+    callback(query.mockData, query.mockIsLoading, query.mockError, query.mockResponse, stopEvent);
+    if (stopEvent.triggered === true) {
+        _removeCallback(query, callback);
+    }
+}
+
 function _loopQuery(query, interval) {
     _loopQueryStop(query);
 
     query.invalidationStop = setTimeout(() => _loopQuery(query, interval), interval * 1000);
 
-    // Si une requete est déjà en cours, il ne faut pas la réexécuter
+    // If a request is already in progress, it should not be re-executed
     if (query.isLoading === false || query.delayedLoading === false) {
         _fetchFromQuery(query);
     }
@@ -348,6 +373,24 @@ function _mockQueryStop(query) {
     query.mockIsLoading = null;
     query.mockError = null;
     query.mockResponse = null;
+}
+
+function _removeCallback(query, callback) {
+    const index = query.callbacks.indexOf(callback);
+    if (index !== -1) {
+      query.callbacks.splice(index, 1);
+    }
+}
+
+/**
+ *
+ * @private
+ */
+function _stopCallback() {
+    this.triggered = false;
+    this.set = () => {
+        this.triggered = true;
+    };
 }
 
 var __webpack_export_target__ = window;
