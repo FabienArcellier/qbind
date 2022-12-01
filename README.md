@@ -85,6 +85,23 @@ userByGender();
 invalidateQuery("users");
 ```
 
+### Delayed query : Run the callback only after an invalidation has been performed
+
+In some case, you have a query that is not ready. It requires an external argument that is not set yet.
+
+```javascript
+function users() {
+    delayedQuery("users", (data, loading, error, response) => {
+        if (loading == false) {
+            console.log(data.results)
+        }
+    });
+    
+    users(); // nothing happens
+    invalidateQuery("users");
+}
+```
+
 ### Recurring query : Run an api request every 5 seconds and refresh dependent widgets
 
 ```javascript

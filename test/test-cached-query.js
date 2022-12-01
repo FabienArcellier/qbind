@@ -1,5 +1,5 @@
 var assert = require('assert');
-const {preparedQuery, invalidateQuery, useQuery, replaceQuery, invokeSubscriptions, resetContext, replaceQueryDefaultEngine} = require("../src/cached-query");
+const {preparedQuery, invalidateQuery, useQuery, replaceQuery, invokeSubscriptions, resetContext, replaceQueryDefaultEngine, delayedQuery} = require("../src/cached-query");
 const sinon = require('sinon');
 
 describe('cached-query', function () {
@@ -199,6 +199,32 @@ describe('cached-query', function () {
 
             /* Then */
             assert.equal(containsHello, true);
+        });
+    });
+
+    describe("delayedQuery", function() {
+        it('should not execute the query before invalidation happens', () => {
+            preparedQuery('users', "https://yolo", {}, {mock: {data: {"hello": "world"}, isLoading: false}});
+
+            let count = 0;
+            delayedQuery("users", (data) => {
+                count += 1;
+            });
+
+            assert.equal(count, 0);
+        });
+
+        it('should not execute the query after invalidation', () => {
+            preparedQuery('users', "https://yolo", {}, {mock: {data: {"hello": "world"}, isLoading: false}});
+
+            let count = 0;
+            delayedQuery("users", (data) => {
+                count += 1;
+            });
+
+            invalidateQuery('users');
+
+            assert.equal(count, 1);
         });
     });
 });

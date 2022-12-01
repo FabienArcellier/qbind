@@ -124,18 +124,20 @@ export function fetchJsonEngine(query) {
 }
 
 export function mockEngine(query) {
-    invokeSubscriptions(query, query.data, query.error, query.response);
+    query.isLoading = query.mockIsLoading;
+    invokeSubscriptions(query, query.mockData, query.mockError, query.mockResponse);
 }
 
 export function mockQuery(key, data, isLoading = false, error = null, response = null) {
     _assertQueryExists(key);
 
     const query = cquery_cache[key];
+
     query.mock = true;
-    query.data = data;
-    query.isLoading = isLoading;
-    query.error = error;
-    query.response = response;
+    query.mockData = data;
+    query.mockIsLoading = isLoading;
+    query.mockError = error;
+    query.mockResponse = response;
 }
 
 /**
@@ -196,6 +198,25 @@ export function useQuery(key, callback) {
     }
 }
 
+/**
+ * Registers a request callback but does not execute it. You have to either wait for an invalidation, or wait for
+ * the query is prepared with useQuery
+ *
+ * @param key
+ * @param callback
+ */
+export function delayedQuery(key, callback) {
+    _assertQueryExists(key);
+
+    const query = cquery_cache[key];
+    if (query.data === null && query.isLoading === false && query.error === null) {
+        query.callbacks.push(callback);
+    } else {
+        query.callbacks.push(callback);
+        callback(query.data, query.isLoading, query.error, query.response);
+    }
+}
+
 /* Internal attributes */
 
 let _defaultEngine = fetchJsonEngine;
@@ -227,7 +248,12 @@ function _fetchFromQuery(query, invalidation = false) {
         }
     }
 
-    if (query.mock === true) {
+    if (query.mock === true && query.mockIsLoading === true) {
+        query.isLoading = query.mockIsLoading;
+        for (const _callback in query.callbacks) {
+            query.callbacks[_callback](query.mockData, query.mockIsLoading, query.mockError, query.mockResponse);
+        }
+    } else if (query.mock === true) {
         mockEngine(query);
     } else if (query.engine !== null) {
         query.engine(query);
@@ -255,16 +281,16 @@ function _loopQueryStop(query) {
 
 function _mockQuery(query, options) {
     query.mock = true;
-    query.data = options.mock.data;
-    query.isLoading = options.mock.isLoading;
-    query.error = options.mock.error;
-    query.response = options.mock.response;
+    query.mockData = options.mock.data;
+    query.mockIsLoading = options.mock.isLoading;
+    query.mockError = options.mock.error;
+    query.mockResponse = options.mock.response;
 }
 
 function _mockQueryStop(query) {
     query.mock = false;
-    query.data = null;
-    query.isLoading = false;
-    query.error = null;
-    query.response = null;
+    query.mockData = null;
+    query.mockIsLoading = null;
+    query.mockError = null;
+    query.mockResponse = null;
 }
