@@ -175,6 +175,7 @@ function fetchJsonEngine(query) {
             invokeSubscriptions(query, data, null, response);
         })
         .catch((error) => {
+            console.error(error);
             invokeSubscriptions(query, null, error, response);
         });
 }
@@ -328,7 +329,13 @@ function _fetchFromQuery(query, invalidation = false) {
 
 function _invokeCallback(callback, query) {
     let stopEvent = new _stopCallback();
-    callback(query.data, query.isLoading, query.error, query.response, stopEvent);
+
+    try {
+        callback(query.data, query.isLoading, query.error, query.response, stopEvent);
+    } catch (error) {
+        console.error(error);
+    }
+
     if (stopEvent.triggered === true) {
         _removeCallback(query, callback);
     }
@@ -336,7 +343,12 @@ function _invokeCallback(callback, query) {
 
 function _invokeCallbackMock(callback, query) {
     let stopEvent = new _stopCallback();
-    callback(query.mockData, query.mockIsLoading, query.mockError, query.mockResponse, stopEvent);
+    try {
+        callback(query.mockData, query.mockIsLoading, query.mockError, query.mockResponse, stopEvent);
+    } catch (error) {
+        console.error(error);
+    }
+
     if (stopEvent.triggered === true) {
         _removeCallback(query, callback);
     }
