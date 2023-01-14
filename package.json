@@ -1,8 +1,8 @@
 {
-  "name": "cached-query",
+  "name": "qbind",
   "version": "0.1.2",
-  "description": "powerful asynchronous data fetching management for vanillajs",
-  "main": "dist/cached-query.js",
+  "description": "powerful asynchronous query binding for vanillajs",
+  "main": "dist/qbind.js",
   "scripts": {
     "build": "webpack --config=webpack.config.js; webpack --config=webpack.min.config.js",
     "test": "mocha --require babel-register",
@@ -10,7 +10,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/FabienArcellier/cached-query.git"
+    "url": "https://github.com/FabienArcellier/qbind"
   },
   "keywords": [
     "cache",
@@ -22,9 +22,9 @@
   "author": "Fabien Arcellier",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/FabienArcellier/cached-query/issues"
+    "url": "https://github.com/FabienArcellier/qbind/issues"
   },
-  "homepage": "https://github.com/FabienArcellier/cached-query#readme",
+  "homepage": "https://github.com/FabienArcellier/qbind#readme",
   "devDependencies": {
     "@babel/preset-env": "^7.19.0",
     "babel-preset-es2015": "^6.24.1",

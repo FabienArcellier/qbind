@@ -1,63 +1,8 @@
-/******/ (() => { // webpackBootstrap
-/******/ 	"use strict";
-/******/ 	// The require scope
-/******/ 	var __webpack_require__ = {};
-/******/ 	
-/************************************************************************/
-/******/ 	/* webpack/runtime/define property getters */
-/******/ 	(() => {
-/******/ 		// define getter functions for harmony exports
-/******/ 		__webpack_require__.d = (exports, definition) => {
-/******/ 			for(var key in definition) {
-/******/ 				if(__webpack_require__.o(definition, key) && !__webpack_require__.o(exports, key)) {
-/******/ 					Object.defineProperty(exports, key, { enumerable: true, get: definition[key] });
-/******/ 				}
-/******/ 			}
-/******/ 		};
-/******/ 	})();
-/******/ 	
-/******/ 	/* webpack/runtime/hasOwnProperty shorthand */
-/******/ 	(() => {
-/******/ 		__webpack_require__.o = (obj, prop) => (Object.prototype.hasOwnProperty.call(obj, prop))
-/******/ 	})();
-/******/ 	
-/******/ 	/* webpack/runtime/make namespace object */
-/******/ 	(() => {
-/******/ 		// define __esModule on exports
-/******/ 		__webpack_require__.r = (exports) => {
-/******/ 			if(typeof Symbol !== 'undefined' && Symbol.toStringTag) {
-/******/ 				Object.defineProperty(exports, Symbol.toStringTag, { value: 'Module' });
-/******/ 			}
-/******/ 			Object.defineProperty(exports, '__esModule', { value: true });
-/******/ 		};
-/******/ 	})();
-/******/ 	
-/************************************************************************/
-var __webpack_exports__ = {};
-/*!*****************************!*\
-  !*** ./src/cached-query.js ***!
-  \*****************************/
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "clearQueries": () => (/* binding */ clearQueries),
-/* harmony export */   "cquery_cache": () => (/* binding */ cquery_cache),
-/* harmony export */   "fetchJsonEngine": () => (/* binding */ fetchJsonEngine),
-/* harmony export */   "invalidateQuery": () => (/* binding */ invalidateQuery),
-/* harmony export */   "invokeSubscriptions": () => (/* binding */ invokeSubscriptions),
-/* harmony export */   "mockEngine": () => (/* binding */ mockEngine),
-/* harmony export */   "mockQuery": () => (/* binding */ mockQuery),
-/* harmony export */   "preparedQuery": () => (/* binding */ preparedQuery),
-/* harmony export */   "replaceQuery": () => (/* binding */ replaceQuery),
-/* harmony export */   "replaceQueryDefaultEngine": () => (/* binding */ replaceQueryDefaultEngine),
-/* harmony export */   "resetContext": () => (/* binding */ resetContext),
-/* harmony export */   "subscribeQuery": () => (/* binding */ subscribeQuery),
-/* harmony export */   "useQuery": () => (/* binding */ useQuery)
-/* harmony export */ });
-const cquery_cache = {};
+export const qbind_store = {};
 
-function clearQueries() {
-    for (var member in cquery_cache) {
-        delete cquery_cache[member];
+export function clearQueries() {
+    for (var member in qbind_store) {
+        delete qbind_store[member];
     }
 }
 
@@ -77,9 +22,9 @@ function clearQueries() {
  *  engine - use alternative query engine when it's define (default: null)
  *  delayedLoading - delay the next query on recursive query to next tick if loading is still in progress (default: true)
  */
-function preparedQuery(key, url, request_options = {}, options = {}) {
-    if (key in cquery_cache) {
-        let query = cquery_cache[key];
+export function preparedQuery(key, url, request_options = {}, options = {}) {
+    if (key in qbind_store) {
+        let query = qbind_store[key];
 
         if (query.url !== url) {
             console.warn(`ignore the url: a query already exists with different url ${query.url}, you try to prepare for ${url}`);
@@ -118,7 +63,7 @@ function preparedQuery(key, url, request_options = {}, options = {}) {
         _loopQuery(query, options.interval);
     }
 
-    cquery_cache[key] = query;
+    qbind_store[key] = query;
 }
 
 /**
@@ -129,10 +74,10 @@ function preparedQuery(key, url, request_options = {}, options = {}) {
  *
  * @param key the key of the prepared query
  */
-function invalidateQuery(key) {
+export function invalidateQuery(key) {
     _assertQueryExists(key);
 
-    const query = cquery_cache[key];
+    const query = qbind_store[key];
     if (query.data === null && query.isLoading === true) {
         return;
     }
@@ -149,7 +94,7 @@ function invalidateQuery(key) {
  * @param error
  * @param response
  */
-function invokeSubscriptions(query, data, error, response) {
+export function invokeSubscriptions(query, data, error, response) {
     query.invalidationCounter -= 1;
 
     if (query.invalidationCounter === 0 || query.postponeInvalidation === false) {
@@ -164,7 +109,7 @@ function invokeSubscriptions(query, data, error, response) {
     }
 }
 
-function fetchJsonEngine(query) {
+export function fetchJsonEngine(query) {
     let response = null;
     fetch(query.url, query.request_options)
         .then(res => {
@@ -180,15 +125,15 @@ function fetchJsonEngine(query) {
         });
 }
 
-function mockEngine(query) {
+export function mockEngine(query) {
     query.isLoading = query.mockIsLoading;
     invokeSubscriptions(query, query.mockData, query.mockError, query.mockResponse);
 }
 
-function mockQuery(key, data, isLoading = false, error = null, response = null) {
+export function mockQuery(key, data, isLoading = false, error = null, response = null) {
     _assertQueryExists(key);
 
-    const query = cquery_cache[key];
+    const query = qbind_store[key];
 
     query.mock = true;
     query.mockData = data;
@@ -205,10 +150,10 @@ function mockQuery(key, data, isLoading = false, error = null, response = null) 
  * @param request_options the options of the request (see the options of the fetch method)
  * @param options the options for prepared query as interval
  */
-function replaceQuery(key, url, request_options = {}, options = {}) {
+export function replaceQuery(key, url, request_options = {}, options = {}) {
     _assertQueryExists(key);
 
-    let query = cquery_cache[key];
+    let query = qbind_store[key];
     query.url = url;
     query.request_options = request_options;
     query.engine = options.engine || _defaultEngine
@@ -226,7 +171,7 @@ function replaceQuery(key, url, request_options = {}, options = {}) {
     }
 }
 
-function replaceQueryDefaultEngine(engine) {
+export function replaceQueryDefaultEngine(engine) {
     _defaultEngine = engine;
 }
 
@@ -235,7 +180,7 @@ function replaceQueryDefaultEngine(engine) {
  *
  * This function is not part of the public API.
  */
-function resetContext() {
+export function resetContext() {
     _defaultEngine = fetchJsonEngine;
     clearQueries();
 }
@@ -246,10 +191,10 @@ function resetContext() {
  * @param key
  * @param callback
  */
-function useQuery(key, callback) {
+export function useQuery(key, callback) {
     _assertQueryExists(key);
 
-    const query = cquery_cache[key];
+    const query = qbind_store[key];
     if (query.data === null && query.isLoading === false && query.error === null) {
         query.callbacks.push(callback);
         _fetchFromQuery(query);
@@ -268,10 +213,10 @@ function useQuery(key, callback) {
  * @param key
  * @param callback
  */
-function subscribeQuery(key, callback) {
+export function subscribeQuery(key, callback) {
     _assertQueryExists(key);
 
-    const query = cquery_cache[key];
+    const query = qbind_store[key];
     if (query.data === null && query.isLoading === false && query.error === null) {
         query.callbacks.push(callback);
     } else {
@@ -287,8 +232,8 @@ let _defaultEngine = fetchJsonEngine;
 /* Private functions */
 
 function _assertQueryExists(key) {
-    if (!(key in cquery_cache)) {
-        const queries = Object.keys(cquery_cache);
+    if (!(key in qbind_store)) {
+        const queries = Object.keys(qbind_store);
         throw `The query '${key}' does not exists - prepared queries : [${queries}]`;
     }
 }
@@ -404,9 +349,3 @@ function _stopCallback() {
         this.triggered = true;
     };
 }
-
-var __webpack_export_target__ = window;
-for(var i in __webpack_exports__) __webpack_export_target__[i] = __webpack_exports__[i];
-if(__webpack_exports__.__esModule) Object.defineProperty(__webpack_export_target__, "__esModule", { value: true });
-/******/ })()
-;

@@ -1,8 +1,8 @@
-# cached-query
+# qbind
 
-[![ci](https://github.com/FabienArcellier/cached-query/actions/workflows/main.yml/badge.svg)](https://github.com/FabienArcellier/cached-query/actions/workflows/main.yml) [![npm version](https://badge.fury.io/js/cached-query.svg)](https://badge.fury.io/js/cached-query)
+[![ci](https://github.com/FabienArcellier/qbind/actions/workflows/main.yml/badge.svg)](https://github.com/FabienArcellier/qbind/actions/workflows/main.yml) [![npm version](https://badge.fury.io/js/qbind.svg)](https://badge.fury.io/js/qbind)
 
-powerful asynchronous data fetching management for vanillajs.
+powerful asynchronous query binding for vanillajs.
 
 **This library is experimental**. Its API is likely to evolve between 2 versions. It covers one of my specific requirements.
 I am not sure to maintain this library yet.
@@ -14,7 +14,7 @@ This library is inspired from :
 
 ## Demo
 
-* [Vanilla.js](https://fabienarcellier.github.io/cached-query/demo/vanilla/) / [[code](./demo/vanilla)]
+* [Vanilla.js](https://fabienarcellier.github.io/qbind/demo/vanilla/) / [[code](./demo/vanilla)]
 
 ## Motivation
 
@@ -28,24 +28,24 @@ I need a asynchronous state management module as [react-query](https://github.co
 * mock REST requests easily to perform unit test
 * process only the last request during cascading invalidations
 
-As I couldn't find a library that match this requirement for vanillajs, I decide to implement `cached-query`
+As I couldn't find a library that match this requirement for vanillajs, I decide to implement `qbind`
 
 ## Installation
 
 ### install in the browser
 
 ```html
-<script src="https://unpkg.com/cached-query/dist/cached-query.min.js"></script>
+<script src="https://unpkg.com/qbind/dist/qbind.min.js"></script>
 ```
 
 ### install with npm
 ```
-npm install --save cached-query
+npm install --save qbind
 ```
 
 ## Code Example
 
-the following examples can be played in the browser console when installing `cached-query` in the browser.
+the following examples can be played in the browser console when installing `qbind` in the browser.
 
 ```javascript
 preparedQuery("users", "https://randomuser.me/api/?seed=foobar&results=5")
@@ -141,7 +141,7 @@ userByGender();
 
 ### Mock query : Test your javascript code without calling your API
 
-`cached-query` allows you to mock an external call in your automatic tests with the `mockQuery` method and 
+`qbind` allows you to mock an external call in your automatic tests with the `mockQuery` method and 
 bypass the request to the server by returning a pre-programmed response.
 
 ```javascript
@@ -180,7 +180,7 @@ users();
 
 ### Trigger the callbacks for every invalidation
 
-By default, `cached-query` only returns the result of the last invalidation when several successive invalidations have been executed. 
+By default, `qbind` only returns the result of the last invalidation when several successive invalidations have been executed. 
 This behavior limits clipping by recovering incomplete data.
 
 If you need to call the callbacks for all invalidations, use the `postponeInvalidation: false` option.
@@ -280,14 +280,14 @@ a specific query engine for a specific query.
 preparedQuery('users', "https://randomuser.me/api/?seed=foobar&results=5", {}, {engine: customAxiosEngine});
 ```
 
-``cached-query`` implements 2 engines that you can use for inspiration ``fetchJsonEngine`` and ``mockEngine``.
+``qbind`` implements 2 engines that you can use for inspiration ``fetchJsonEngine`` and ``mockEngine``.
 
 ## The latest version
 
 You can find the latest version to ...
 
 ```bash
-git clone https://github.com/FabienArcellier/cached-query.git
+git clone https://github.com/FabienArcellier/qbind.git
 ```
 
 ### Tests

@@ -1,8 +1,8 @@
 var assert = require('assert');
-const {preparedQuery, invalidateQuery, useQuery, replaceQuery, invokeSubscriptions, resetContext, replaceQueryDefaultEngine, subscribeQuery} = require("../src/cached-query");
+const {preparedQuery, invalidateQuery, useQuery, replaceQuery, invokeSubscriptions, resetContext, replaceQueryDefaultEngine, subscribeQuery} = require("../src/qbind");
 const sinon = require('sinon');
 
-describe('cached-query', function () {
+describe('qbind', function () {
     let clock;
     beforeEach(function () {
         resetContext();
